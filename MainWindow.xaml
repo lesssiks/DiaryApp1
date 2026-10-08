@@ -1,0 +1,162 @@
+<Window x:Class="DiaryApp1.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DiaryApp1"
+        mc:Ignorable="d"
+        Title="Блокнот-ежедневник" Height="650" Width="950" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <TabControl>
+            <TabItem Header="Заметки">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="3*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <Button Content="➕ Новая заметка" Height="35" Click="BtnCreateNote_Click" Margin="0,0,0,5" Background="#E1F5FE" FontWeight="Bold"/>
+                        <Button Content="🗑️ Очистить Корзину безвозвратно" Height="25" Click="BtnClearTrash_Click" Margin="0,0,0,5" Background="#FFEBEE"/>
+                        <Button Content="📥 Экспорт всех заметок в CSV" Height="25" Click="BtnExportCSV_Click" Margin="0,0,0,10" Background="#E8F5E9"/>
+
+                        <TextBlock Text="Ваши заметки (Плиточная сетка):" FontWeight="Bold" Margin="0,5"/>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Height="420">
+                            <ItemsControl x:Name="NotesItemsControl">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" Width="350"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#B0BEC5" BorderThickness="1" Margin="5" Width="160" Height="140" CornerRadius="4" Background="#FFFFFF">
+                                            <Grid Margin="8">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding LastModified, StringFormat={}{0:dd.MM.yyyy}}" FontSize="9" Foreground="Gray" Margin="0,2"/>
+                                                    <TextBlock Text="{Binding PreviewText}" FontSize="11" Margin="0,4" TextWrapping="Wrap" Height="50" Foreground="#37474F"/>
+                                                </StackPanel>
+                                                <StackPanel VerticalAlignment="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                                                    <Button Content="✏️" Width="25" Height="22" Margin="2" Click="BtnEditNote_Click" Tag="{Binding Id}"/>
+                                                    <Button Content="🗑️" Width="25" Height="22" Margin="2" Click="BtnDeleteNote_Click" Tag="{Binding Id}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </StackPanel>
+                    <Grid Grid.Column="1" x:Name="NoteEditPanel" Visibility="Collapsed" Margin="10,0,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Блок Заголовка -->
+                        <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                            <TextBlock Text="Название заметки:" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
+                            <TextBox x:Name="TxtNoteTitle" FontSize="15" FontWeight="Bold" Padding="6,4"/>
+                        </StackPanel>
+
+                        <!-- Блок Тегов -->
+                        <StackPanel Grid.Row="1" Margin="0,0,0,8">
+                            <TextBlock Text="Теги (через запятую):" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
+                            <TextBox x:Name="TxtNoteTags" FontSize="12" Padding="6,4"/>
+                        </StackPanel>
+
+                        <!-- Панель инструментов с кнопкой Вырезать -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="✂️ Вырезать выделенный текст" Padding="12,5" Click="BtnCut_Click" Background="#FFF3E0" BorderBrush="#FFE0B2"/>
+                        </StackPanel>
+
+                        <!-- Основной текст заметки -->
+                        <StackPanel Grid.Row="3" Margin="0,0,0,5">
+                            <TextBlock Text="Редактор текста (поддерживает Markdown):" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
+                            <TextBox x:Name="TxtNoteContent" TextWrapping="Wrap" AcceptsReturn="True" Height="170" Padding="6" VerticalScrollBarVisibility="Auto" TextChanged="TxtNoteContent_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- Визуальное превью Markdown -->
+                        <StackPanel Grid.Row="4" Margin="0,5,0,5">
+                            <TextBlock Text="Визуальный предпросмотр:" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
+                            <RichTextBox x:Name="RtbMarkdownPreview" IsReadOnly="True" Background="#FAFAFA" Height="170" Padding="6" VerticalScrollBarVisibility="Auto"/>
+                        </StackPanel>
+
+                        <!-- Кнопка фиксации изменений -->
+                        <Button Grid.Row="5" Content="💾 Сохранить заметку" Height="38" Click="BtnSaveNote_Click" Background="#C8E6C9" BorderBrush="#A5D6A7" FontWeight="Bold" FontSize="13" Margin="0,5,0,0"/>
+                    </Grid>
+
+                </Grid>
+            </TabItem>
+            <TabItem Header="Календарь и Задачи">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,15,0">
+                        <Calendar x:Name="MainCalendar" SelectedDatesChanged="MainCalendar_SelectedDatesChanged"/>
+                    </StackPanel>
+                    <Grid Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock x:Name="TxtSelectedDateHeader" Text="Задачи" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                        <ListBox x:Name="LbxTasks" Grid.Row="1" HorizontalContentAlignment="Stretch">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#CFD8DC" BorderThickness="0,0,0,1" Padding="5">
+                                        <Grid>
+                                            <StackPanel Orientation="Horizontal">
+                                                <CheckBox IsChecked="{Binding IsCompleted}" Click="TaskCheckBox_Click" Tag="{Binding Id}" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="TaskTitleText" Text="{Binding Title}" Margin="10,0" FontSize="13" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Recurrence, StringFormat='({0})'}" Foreground="Blue" FontSize="11" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <Button Content="❌" HorizontalAlignment="Right" Click="BtnDeleteTask_Click" Tag="{Binding Id}" Background="Transparent" BorderThickness="0"/>
+                                        </Grid>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                            <Setter TargetName="TaskTitleText" Property="Foreground" Value="Red"/>
+                                            <Setter TargetName="TaskTitleText" Property="FontWeight" Value="Bold"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                            <Setter TargetName="TaskTitleText" Property="TextDecorations" Value="Strikethrough"/>
+                                            <Setter TargetName="TaskTitleText" Property="Foreground" Value="Gray"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <StackPanel Grid.Row="2" Margin="0,10,0,0" Orientation="Vertical">
+                            <TextBox x:Name="TxtNewTaskTitle" Height="30" Margin="0,0,0,5" Padding="5"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="CbxRecurrence" SelectedIndex="0" Grid.Column="0" Margin="0,0,5,0" Height="30">
+                                    <ComboBoxItem Content="Без повторений"/>
+                                    <ComboBoxItem Content="Ежедневно"/>
+                                    <ComboBoxItem Content="Еженедельно"/>
+                                    <ComboBoxItem Content="Ежемесячно"/>
+                                </ComboBox>
+                                <Button Content="➕ Добавить задачу" Grid.Column="1" Height="30" Click="BtnAddTask_Click" Background="#E8F5E9"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
