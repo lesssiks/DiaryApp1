@@ -38,12 +38,36 @@ namespace DiaryApp
             _repository.SaveNotes(_allNotes);
             _repository.SaveTasks(_allTasks);
         }
-
+        private bool _showTrashMode = false;
         // Обновление интерфейса: выводим только те заметки, которые не удалены в корзину
         private void RefreshNotesGrid()
         {
             NotesItemsControl.ItemsSource = null;
-            NotesItemsControl.ItemsSource = _allNotes.Where(n => !n.IsInTrash).ToList();
+
+            if (_showTrashMode)
+            {
+                // Берем заметки из корзины
+                var trashedNotes = _allNotes.Where(n => n.IsInTrash).ToList();
+
+                NotesItemsControl.ItemsSource = trashedNotes;
+
+                if (TxtNotesHeader != null)
+                    TxtNotesHeader.Text = $"Удаленные заметки (Корзина: {trashedNotes.Count}):";
+
+                BtnToggleTrash.Content = "📁 Показать активные заметки";
+            }
+            else
+            {
+                // Берем только активные заметки
+                var activeNotes = _allNotes.Where(n => !n.IsInTrash).ToList();
+
+                NotesItemsControl.ItemsSource = activeNotes;
+
+                if (TxtNotesHeader != null)
+                    TxtNotesHeader.Text = "Ваши заметки (Плиточная сетка):";
+
+                BtnToggleTrash.Content = "🗑️ Показать Корзину";
+            }
         }
 
         // Создание новой заметки со стандартным шаблоном и открытие её для редактирования
@@ -101,11 +125,30 @@ namespace DiaryApp
                 }
             }
         }
+        // Обработчик кнопки восстановления заметки из корзины
+        private void BtnRestoreNote_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is Guid id)
+            {
+                // Ищем заметку по её уникальному ID
+                var note = _allNotes.FirstOrDefault(n => n.Id == id);
+                if (note != null)
+                {
+                    // Возвращаем в активные
+                    note.IsInTrash = false;
+                    note.LastModified = DateTime.Now; // Опционально: обновляем дату изменения
 
+                    // Сохраняем базу данных и обновляем интерфейс
+                    SaveData();
+                    RefreshNotesGrid();
+                }
+            }
+        }
         // Жесткое удаление: навсегда стираем из памяти все заметки, находящиеся в корзине
         private void BtnClearTrash_Click(object sender, RoutedEventArgs e)
         {
             _allNotes.RemoveAll(n => n.IsInTrash);
+            _showTrashMode = false;
             SaveData();
             RefreshNotesGrid();
             MessageBox.Show("Корзина очищена безвозвратно.", "Успех");
@@ -247,6 +290,12 @@ namespace DiaryApp
             {
                 DataExporter.ExportNotesToCsv(_allNotes.Where(n => !n.IsInTrash).ToList(), saveFileDialog.FileName);
             }
+        }
+
+        private void BtnToggleTrash_Click(object sender, RoutedEventArgs e)
+        {
+            _showTrashMode = !_showTrashMode;
+            RefreshNotesGrid();
         }
     }
 }

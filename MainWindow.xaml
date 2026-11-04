@@ -17,10 +17,11 @@
 
                     <StackPanel Grid.Column="0" Margin="0,0,10,0">
                         <Button Content="➕ Новая заметка" Height="35" Click="BtnCreateNote_Click" Margin="0,0,0,5" Background="#E1F5FE" FontWeight="Bold"/>
+                        <Button x:Name="BtnToggleTrash" Content="🗑️ Показать Корзину" Height="25" Click="BtnToggleTrash_Click" Margin="0,0,0,5" Background="#FFF3E0"/>
                         <Button Content="🗑️ Очистить Корзину безвозвратно" Height="25" Click="BtnClearTrash_Click" Margin="0,0,0,5" Background="#FFEBEE"/>
                         <Button Content="📥 Экспорт всех заметок в CSV" Height="25" Click="BtnExportCSV_Click" Margin="0,0,0,10" Background="#E8F5E9"/>
 
-                        <TextBlock Text="Ваши заметки (Плиточная сетка):" FontWeight="Bold" Margin="0,5"/>
+                        <TextBlock Name="TxtNotesHeader" Text="Ваши заметки (Плиточная сетка):" FontWeight="Bold" Margin="0,5"/>
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Height="420">
                             <ItemsControl x:Name="NotesItemsControl">
                                 <ItemsControl.ItemsPanel>
@@ -38,11 +39,20 @@
                                                     <TextBlock Text="{Binding PreviewText}" FontSize="11" Margin="0,4" TextWrapping="Wrap" Height="50" Foreground="#37474F"/>
                                                 </StackPanel>
                                                 <StackPanel VerticalAlignment="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                                                    <Button Content="✏️" Width="25" Height="22" Margin="2" Click="BtnEditNote_Click" Tag="{Binding Id}"/>
-                                                    <Button Content="🗑️" Width="25" Height="22" Margin="2" Click="BtnDeleteNote_Click" Tag="{Binding Id}"/>
+                                                    <Button x:Name="CardBtnEdit" Content="✏️" Width="25" Height="22" Margin="2" Click="BtnEditNote_Click" Tag="{Binding Id}"/>
+                                                    <Button x:Name="CardBtnDelete" Content="🗑️" Width="25" Height="22" Margin="2" Click="BtnDeleteNote_Click" Tag="{Binding Id}"/>
+                                                    <Button x:Name="CardBtnRestore" Content="↺" Width="25" Height="22" Margin="2" Click="BtnRestoreNote_Click" Tag="{Binding Id}" Visibility="Collapsed"/>
                                                 </StackPanel>
                                             </Grid>
                                         </Border>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsInTrash}" Value="True">
+                                                <!-- Если заметка в корзине: прячем карандаш и корзину, показываем стрелку восстановления -->
+                                                <Setter TargetName="CardBtnEdit" Property="Visibility" Value="Collapsed"/>
+                                                <Setter TargetName="CardBtnDelete" Property="Visibility" Value="Collapsed"/>
+                                                <Setter TargetName="CardBtnRestore" Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -93,7 +103,7 @@
 
                 </Grid>
             </TabItem>
-            <TabItem Header="Календарь и Задачи">
+            <TabItem Header="Календарь и Задачи" Height="22" Margin="-2,-2,-2,0" VerticalAlignment="Top">
                 <Grid Margin="10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
