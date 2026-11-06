@@ -19,6 +19,7 @@ namespace DiaryApp
         {
             InitializeComponent();
             LoadData();
+            UpdateTagsFilterList();
             RefreshNotesGrid();
 
             // Устанавливаем текущую дату в календаре по умолчанию
@@ -39,15 +40,26 @@ namespace DiaryApp
             _repository.SaveTasks(_allTasks);
         }
         private bool _showTrashMode = false;
+
         // Обновление интерфейса: выводим только те заметки, которые не удалены в корзину
         private void RefreshNotesGrid()
         {
             NotesItemsControl.ItemsSource = null;
 
+            string? selectedTag = CbxSearchTag?.SelectedItem as string;
+            if (selectedTag == "[Все заметки]") selectedTag = null;
+
             if (_showTrashMode)
             {
                 // Берем заметки из корзины
                 var trashedNotes = _allNotes.Where(n => n.IsInTrash).ToList();
+
+                if (!string.IsNullOrEmpty(selectedTag))
+                {
+                    trashedNotes = trashedNotes
+                        .Where(n => n.Tags != null && n.Tags.Any(t => t.Equals(selectedTag, StringComparison.OrdinalIgnoreCase)))
+                        .ToList();
+                }
 
                 NotesItemsControl.ItemsSource = trashedNotes;
 
@@ -61,15 +73,34 @@ namespace DiaryApp
                 // Берем только активные заметки
                 var activeNotes = _allNotes.Where(n => !n.IsInTrash).ToList();
 
+                if (!string.IsNullOrEmpty(selectedTag))
+                {
+                    activeNotes = activeNotes
+                        .Where(n => n.Tags != null && n.Tags.Any(t => t.Equals(selectedTag, StringComparison.OrdinalIgnoreCase)))
+                        .ToList();
+                }
+
                 NotesItemsControl.ItemsSource = activeNotes;
 
                 if (TxtNotesHeader != null)
-                    TxtNotesHeader.Text = "Ваши заметки (Плиточная сетка):";
+                {
+                    TxtNotesHeader.Text = string.IsNullOrEmpty(selectedTag)
+                        ? "Ваши заметки:"
+                        : $"Заметки с тегом \"{selectedTag}\" ({activeNotes.Count}):";
+                }
 
                 BtnToggleTrash.Content = "🗑️ Показать Корзину";
             }
         }
-
+        private void CbxSearchTag_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            RefreshNotesGrid();
+        }
+        // Метод живой фильтрации. Вызывается автоматически при вводе каждого символа
+        private void TxtSearchTag_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            RefreshNotesGrid();
+        }
         // Создание новой заметки со стандартным шаблоном и открытие её для редактирования
         private void BtnCreateNote_Click(object sender, RoutedEventArgs e)
         {
@@ -81,6 +112,7 @@ namespace DiaryApp
             };
             _allNotes.Add(newNote);
             SaveData();
+            UpdateTagsFilterList();
             RefreshNotesGrid();
             OpenNoteForEditing(newNote);
         }
@@ -140,6 +172,7 @@ namespace DiaryApp
 
                     // Сохраняем базу данных и обновляем интерфейс
                     SaveData();
+                    UpdateTagsFilterList();
                     RefreshNotesGrid();
                 }
             }
@@ -150,6 +183,7 @@ namespace DiaryApp
             _allNotes.RemoveAll(n => n.IsInTrash);
             _showTrashMode = false;
             SaveData();
+            UpdateTagsFilterList();
             RefreshNotesGrid();
             MessageBox.Show("Корзина очищена безвозвратно.", "Успех");
         }
@@ -171,6 +205,7 @@ namespace DiaryApp
 
                 _currentEditingNote.LastModified = DateTime.Now;
                 SaveData();
+                UpdateTagsFilterList();
                 RefreshNotesGrid();
                 NoteEditPanel.Visibility = Visibility.Collapsed;
             }
@@ -272,9 +307,17 @@ namespace DiaryApp
         {
             if (sender is Button btn && btn.Tag is Guid id)
             {
-                _allTasks.RemoveAll(t => t.Id == id);
-                SaveData();
-                RefreshTasksList();
+                var note = _allNotes.FirstOrDefault(n => n.Id == id);
+                if (note != null)
+                {
+                    note.IsInTrash = true;
+
+                    // Если удаляемая заметка была открыта в редакторе — скрываем панель
+                    if (_currentEditingNote?.Id == id) NoteEditPanel.Visibility = Visibility.Collapsed;
+                    _allTasks.RemoveAll(t => t.Id == id);
+                    SaveData();
+                    RefreshTasksList();
+                }
             }
         }
 
@@ -291,11 +334,51 @@ namespace DiaryApp
                 DataExporter.ExportNotesToCsv(_allNotes.Where(n => !n.IsInTrash).ToList(), saveFileDialog.FileName);
             }
         }
-
+        // Отвечает за переключение между режимом просмотра активных заметок и просмотром Корзины
         private void BtnToggleTrash_Click(object sender, RoutedEventArgs e)
         {
             _showTrashMode = !_showTrashMode;
             RefreshNotesGrid();
         }
+        // Отвечает за автоматическое сканирование всех заметок, сбор уникальных тегов и обновление выпадающего списка (ComboBox) фильтрации.
+        private void UpdateTagsFilterList()
+        {
+            if (CbxSearchTag == null) return;
+
+            // Отключаем на время вызов события, чтобы избежать зацикливания при обновлении данных
+            CbxSearchTag.SelectionChanged -= CbxSearchTag_SelectionChanged;
+
+            // Запоминаем, какой тег был выбран до обновления, чтобы выбор не сбрасывался
+            string? previouslySelected = CbxSearchTag.SelectedItem as string;
+
+            // Собираем абсолютно все теги из списка заметок
+            var allTags = _allNotes
+                .Where(n => n != null && !n.IsInTrash && n.Tags != null)
+                .SelectMany(n => n.Tags)
+                .Select(t => t.Trim())
+                .Where(t => !string.IsNullOrEmpty(t))
+                .Distinct() // Оставляем только уникальные теги
+                .OrderBy(t => t) // Сортируем по алфавиту
+                .ToList();
+
+            // Создаем список для выпадающего меню и добавляем пункт сброса фильтра
+            var comboItems = new List<string> { "[Все заметки]" };
+            comboItems.AddRange(allTags);
+
+            CbxSearchTag.ItemsSource = comboItems;
+
+            // Возвращаем выделение обратно, если этот тег всё ещё существует
+            if (previouslySelected != null && comboItems.Contains(previouslySelected))
+            {
+                CbxSearchTag.SelectedItem = previouslySelected;
+            }
+            else
+            {
+                CbxSearchTag.SelectedIndex = 0; // По умолчанию выбрано "[Все заметки]"
+            }
+
+            CbxSearchTag.SelectionChanged += CbxSearchTag_SelectionChanged;
+        }
+
     }
 }

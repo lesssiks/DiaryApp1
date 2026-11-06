@@ -5,49 +5,176 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DiaryApp"
         mc:Ignorable="d"
-        Title="Блокнот-ежедневник" Height="650" Width="950" WindowStartupLocation="CenterScreen">
-    <Grid>
-        <TabControl>
-            <TabItem Header="Заметки">
-                <Grid Margin="10">
+        Title="Блокнот-ежедневник" MinHeight="650" MinWidth="950" WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <!-- Общий стиль для кнопок со скруглением углов -->
+        <Style x:Key="ModernButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Кастомный стиль для выпадающего списка тегов -->
+        <Style x:Key="ModernComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#374151"/>
+            <!-- Стилизация элементов внутри выпадающего списка -->
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Padding" Value="10,8"/>
+                        <Setter Property="Margin" Value="2,1"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ComboBoxItem">
+                                    <!-- Скругление для строк внутри выпадающего меню -->
+                                    <Border x:Name="ItemBorder" 
+                                    Background="{TemplateBinding Background}" 
+                                    Padding="{TemplateBinding Padding}" 
+                                    CornerRadius="4">
+                                        <ContentPresenter VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <!-- Красивый синий фон при наведении мышки на тег -->
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="ItemBorder" Property="Background" Value="#EFF6FF"/>
+                                            <Setter Property="Foreground" Value="#2563EB"/>
+                                        </Trigger>
+                                        <!-- Стиль для уже выбранного элемента в списке -->
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="ItemBorder" Property="Background" Value="#DBEAFE"/>
+                                            <Setter Property="Foreground" Value="#1E40AF"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Стиль для полей ввода -->
+        <Style TargetType="TextBox">
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Стиль для комбобокса -->
+        <Style TargetType="ComboBox">
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Стиль элементов вкладок -->
+        <Style TargetType="TabItem">
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="#E5E7EB"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="#F3F4F6">
+        <TabControl Background="Transparent" BorderThickness="0" Margin="5">
+            <TabItem Header="📋 Заметки">
+                <Grid Margin="12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="3*"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                        <Button Content="➕ Новая заметка" Height="35" Click="BtnCreateNote_Click" Margin="0,0,0,5" Background="#E1F5FE" FontWeight="Bold"/>
-                        <Button x:Name="BtnToggleTrash" Content="🗑️ Показать Корзину" Height="25" Click="BtnToggleTrash_Click" Margin="0,0,0,5" Background="#FFF3E0"/>
-                        <Button Content="🗑️ Очистить Корзину безвозвратно" Height="25" Click="BtnClearTrash_Click" Margin="0,0,0,5" Background="#FFEBEE"/>
-                        <Button Content="📥 Экспорт всех заметок в CSV" Height="25" Click="BtnExportCSV_Click" Margin="0,0,0,10" Background="#E8F5E9"/>
+                    <!-- ЛЕВАЯ КОЛОНКА: Список заметок -->
+                    <Grid Grid.Column="0" Margin="0,0,12,0">
+                        <Grid.RowDefinitions>
+                            <!-- Строки для кнопок управления -->
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <!-- Строка для заголовка -->
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
 
-                        <TextBlock Name="TxtNotesHeader" Text="Ваши заметки (Плиточная сетка):" FontWeight="Bold" Margin="0,5"/>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Height="420">
+                        <!-- Кнопки управления -->
+                        <Button Grid.Row="0" Style="{StaticResource ModernButtonStyle}" Content="➕ Новая заметка" Height="38" Click="BtnCreateNote_Click" Margin="0,0,0,6" Background="#2563EB" Foreground="White" BorderThickness="0" FontWeight="Bold" FontSize="13"/>
+                        <Button Grid.Row="1" x:Name="BtnToggleTrash" Style="{StaticResource ModernButtonStyle}" Content="🗑️ Показать Корзину" Height="30" Click="BtnToggleTrash_Click" Margin="0,0,0,6" Background="#FFF7ED" BorderBrush="#FED7AA" FontWeight="SemiBold"/>
+                        <Button Grid.Row="2" Style="{StaticResource ModernButtonStyle}" Content="🗑️ Очистить Корзину безвозвратно" Height="30" Click="BtnClearTrash_Click" Margin="0,0,0,6" Background="#FEF2F2" BorderBrush="#FCA5A5" FontSize="11"/>
+                        <Button Grid.Row="3" Style="{StaticResource ModernButtonStyle}" Content="📥 Экспорт всех заметок в CSV" Height="30" Click="BtnExportCSV_Click" Margin="0,0,0,12" Background="#F0FDF4" BorderBrush="#BBF7D0" FontWeight="SemiBold"/>
+                        <Grid Grid.Row="4" Margin="2,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="🔍 Фильтр по тегу:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,8,0" FontSize="12.5"/>
+
+                            <ComboBox Grid.Column="1" x:Name="CbxSearchTag"  Style="{StaticResource ModernComboBoxStyle}" SelectionChanged="CbxSearchTag_SelectionChanged" Background="White"/>
+                        </Grid>
+                        <!-- Заголовок списка -->
+                        <TextBlock Grid.Row="5" Name="TxtNotesHeader" Text="Ваши заметки:" FontWeight="Bold" FontSize="13" Foreground="#1F2937" Margin="2,5,0,8"/>
+
+                        <ScrollViewer Grid.Row="6" VerticalScrollBarVisibility="Auto" Background="Transparent">
                             <ItemsControl x:Name="NotesItemsControl">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal" Width="350"/>
+                                        <!-- Автоматическая ширина под размер ScrollViewer -->
+                                        <WrapPanel Orientation="Horizontal" Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border BorderBrush="#B0BEC5" BorderThickness="1" Margin="5" Width="160" Height="140" CornerRadius="4" Background="#FFFFFF">
-                                            <Grid Margin="8">
+                                        <Border BorderBrush="#E5E7EB" BorderThickness="1" Margin="5" Width="162" Height="142" CornerRadius="8" Background="#FFFFFF">
+                                            <Grid Margin="10">
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="12" TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Text="{Binding LastModified, StringFormat={}{0:dd.MM.yyyy}}" FontSize="9" Foreground="Gray" Margin="0,2"/>
-                                                    <TextBlock Text="{Binding PreviewText}" FontSize="11" Margin="0,4" TextWrapping="Wrap" Height="50" Foreground="#37474F"/>
+                                                    <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="12.5" Foreground="#1E3A8A" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding LastModified, StringFormat={}{0:dd.MM.yyyy}}" FontSize="9.5" Foreground="#9CA3AF" Margin="0,3"/>
+                                                    <TextBlock Text="{Binding PreviewText}" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap" Height="50" Foreground="#374151" LineHeight="14"/>
                                                 </StackPanel>
                                                 <StackPanel VerticalAlignment="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                                                    <Button x:Name="CardBtnEdit" Content="✏️" Width="25" Height="22" Margin="2" Click="BtnEditNote_Click" Tag="{Binding Id}"/>
-                                                    <Button x:Name="CardBtnDelete" Content="🗑️" Width="25" Height="22" Margin="2" Click="BtnDeleteNote_Click" Tag="{Binding Id}"/>
-                                                    <Button x:Name="CardBtnRestore" Content="↺" Width="25" Height="22" Margin="2" Click="BtnRestoreNote_Click" Tag="{Binding Id}" Visibility="Collapsed"/>
+                                                    <Button x:Name="CardBtnEdit" Style="{StaticResource ModernButtonStyle}" Content="✏️" Width="26" Height="24" Margin="2" Padding="0" Click="BtnEditNote_Click" Tag="{Binding Id}" Background="#F9FAFB"/>
+                                                    <Button x:Name="CardBtnDelete" Style="{StaticResource ModernButtonStyle}" Content="🗑️" Width="26" Height="24" Margin="2" Padding="0" Click="BtnDeleteNote_Click" Tag="{Binding Id}" Background="#FEF2F2" BorderBrush="#FCA5A5"/>
+                                                    <Button x:Name="CardBtnRestore" Style="{StaticResource ModernButtonStyle}" Content="↺" Width="26" Height="24" Margin="2" Padding="0" Click="BtnRestoreNote_Click" Tag="{Binding Id}" Visibility="Collapsed" Background="#F0FDF4" BorderBrush="#BBF7D0"/>
                                                 </StackPanel>
                                             </Grid>
                                         </Border>
                                         <DataTemplate.Triggers>
                                             <DataTrigger Binding="{Binding IsInTrash}" Value="True">
-                                                <!-- Если заметка в корзине: прячем карандаш и корзину, показываем стрелку восстановления -->
                                                 <Setter TargetName="CardBtnEdit" Property="Visibility" Value="Collapsed"/>
                                                 <Setter TargetName="CardBtnDelete" Property="Visibility" Value="Collapsed"/>
                                                 <Setter TargetName="CardBtnRestore" Property="Visibility" Value="Visible"/>
@@ -57,62 +184,82 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
-                    </StackPanel>
-                    <Grid Grid.Column="1" x:Name="NoteEditPanel" Visibility="Collapsed" Margin="10,0,0,0">
+                    </Grid>
+
+                    <!-- ПРАВАЯ КОЛОНКА: Панель редактирования -->
+                    <Grid Grid.Column="1" x:Name="NoteEditPanel" Visibility="Collapsed" Margin="12,0,0,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
+                            <!-- Заголовок (по размеру текста) -->
                             <RowDefinition Height="Auto"/>
+                            <!-- Теги (по размеру текста) -->
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="1*"/>
-                            <RowDefinition Height="1*"/>
+                            <!-- Панель инструментов (по размеру кнопок) -->
+                            <RowDefinition Height="2*"/>
+                            <!-- Редактор текста (весит больше, тянется лучше) -->
+                            <RowDefinition Height="1.5*"/>
+                            <!-- Предпросмотр Markdown (чуть меньше редактора) -->
                             <RowDefinition Height="Auto"/>
+                            <!-- Кнопка сохранить (прижата к низу) -->
                         </Grid.RowDefinitions>
 
                         <!-- Блок Заголовка -->
-                        <StackPanel Grid.Row="0" Margin="0,0,0,8">
-                            <TextBlock Text="Название заметки:" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
-                            <TextBox x:Name="TxtNoteTitle" FontSize="15" FontWeight="Bold" Padding="6,4"/>
+                        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                            <TextBlock Text="Название заметки:" FontSize="11" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,4"/>
+                            <TextBox x:Name="TxtNoteTitle" FontSize="14" FontWeight="Bold" Padding="8,6" Background="White"/>
                         </StackPanel>
 
                         <!-- Блок Тегов -->
-                        <StackPanel Grid.Row="1" Margin="0,0,0,8">
-                            <TextBlock Text="Теги (через запятую):" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
-                            <TextBox x:Name="TxtNoteTags" FontSize="12" Padding="6,4"/>
+                        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+                            <TextBlock Text="Теги (через запятую):" FontSize="11" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,4"/>
+                            <TextBox x:Name="TxtNoteTags" FontSize="12" Padding="8,5" Background="White" Foreground="#0F766E"/>
                         </StackPanel>
 
-                        <!-- Панель инструментов с кнопкой Вырезать -->
-                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
-                            <Button Content="✂️ Вырезать выделенный текст" Padding="12,5" Click="BtnCut_Click" Background="#FFF3E0" BorderBrush="#FFE0B2"/>
+                        <!-- Панель инструментов -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+                            <Button Style="{StaticResource ModernButtonStyle}" Content="✂️ Вырезать выделенный текст" Padding="12,6" Click="BtnCut_Click" Background="#FFF7ED" BorderBrush="#FED7AA" FontWeight="SemiBold" FontSize="11"/>
                         </StackPanel>
 
                         <!-- Основной текст заметки -->
-                        <StackPanel Grid.Row="3" Margin="0,0,0,5">
-                            <TextBlock Text="Редактор текста (поддерживает Markdown):" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
-                            <TextBox x:Name="TxtNoteContent" TextWrapping="Wrap" AcceptsReturn="True" Height="170" Padding="6" VerticalScrollBarVisibility="Auto" TextChanged="TxtNoteContent_TextChanged"/>
-                        </StackPanel>
+                        <Grid Grid.Row="3" Margin="0,0,0,10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="1*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="Редактор текста (поддерживает Markdown):" FontSize="11" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,4"/>
+                            <TextBox Grid.Row="1" x:Name="TxtNoteContent" TextWrapping="Wrap" AcceptsReturn="True" Padding="8" VerticalScrollBarVisibility="Auto" Background="White" TextChanged="TxtNoteContent_TextChanged" VerticalContentAlignment="Top" MinHeight="150"/>
+                        </Grid>
 
                         <!-- Визуальное превью Markdown -->
-                        <StackPanel Grid.Row="4" Margin="0,5,0,5">
-                            <TextBlock Text="Визуальный предпросмотр:" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
-                            <RichTextBox x:Name="RtbMarkdownPreview" IsReadOnly="True" Background="#FAFAFA" Height="170" Padding="6" VerticalScrollBarVisibility="Auto"/>
-                        </StackPanel>
+                        <Grid Grid.Row="4" Margin="0,0,0,12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="1*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="Визуальный предпросмотр:" FontSize="11" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,4"/>
+                            <RichTextBox Grid.Row="1" x:Name="RtbMarkdownPreview" IsReadOnly="True" Background="#F9FAFB" BorderBrush="#D1D5DB" Padding="8" VerticalScrollBarVisibility="Auto" MinHeight="120"/>
+                        </Grid>
 
                         <!-- Кнопка фиксации изменений -->
-                        <Button Grid.Row="5" Content="💾 Сохранить заметку" Height="38" Click="BtnSaveNote_Click" Background="#C8E6C9" BorderBrush="#A5D6A7" FontWeight="Bold" FontSize="13" Margin="0,5,0,0"/>
+                        <Button Grid.Row="5" Style="{StaticResource ModernButtonStyle}" Content="💾 Сохранить заметку" Height="38" Click="BtnSaveNote_Click" Background="#16A34A" Foreground="White" BorderThickness="0" FontWeight="Bold" FontSize="13"/>
                     </Grid>
 
                 </Grid>
             </TabItem>
-            <TabItem Header="Календарь и Задачи" Height="22" Margin="-2,-2,-2,0" VerticalAlignment="Top">
-                <Grid Margin="10">
+
+            <TabItem Header="📅 Календарь и Задачи">
+                <Grid Margin="12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0" Margin="0,0,15,0">
-                        <Calendar x:Name="MainCalendar" SelectedDatesChanged="MainCalendar_SelectedDatesChanged"/>
+                    <!-- ЛЕВАЯ ЧАСТЬ: Календарь -->
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                        <Calendar x:Name="MainCalendar" SelectedDatesChanged="MainCalendar_SelectedDatesChanged" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
                     </StackPanel>
+
+                    <!-- ПРАВАЯ ЧАСТЬ: Задачи -->
                     <Grid Grid.Column="1">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -120,48 +267,60 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock x:Name="TxtSelectedDateHeader" Text="Задачи" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <TextBlock x:Name="TxtSelectedDateHeader" Text="Задачи" FontSize="15" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,12"/>
 
-                        <ListBox x:Name="LbxTasks" Grid.Row="1" HorizontalContentAlignment="Stretch">
+                        <!-- Список задач -->
+                        <ListBox x:Name="LbxTasks" Grid.Row="1" HorizontalContentAlignment="Stretch" BorderBrush="#D1D5DB" BorderThickness="1" Background="#F9FAFB" Padding="4">
+                            <ListBox.Resources>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                </Style>
+                            </ListBox.Resources>
+
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="#CFD8DC" BorderThickness="0,0,0,1" Padding="5">
+                                    <Border BorderBrush="#E5E7EB" BorderThickness="1" Padding="10,8" Background="White" Margin="0,0,0,5" CornerRadius="6">
                                         <Grid>
-                                            <StackPanel Orientation="Horizontal">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <CheckBox IsChecked="{Binding IsCompleted}" Click="TaskCheckBox_Click" Tag="{Binding Id}" VerticalAlignment="Center"/>
-                                                <TextBlock x:Name="TaskTitleText" Text="{Binding Title}" Margin="10,0" FontSize="13" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding Recurrence, StringFormat='({0})'}" Foreground="Blue" FontSize="11" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="TaskTitleText" Text="{Binding Title}" Margin="12,0" FontSize="12.5" Foreground="#1F2937" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Recurrence, StringFormat='({0})'}" Foreground="#2563EB" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                             </StackPanel>
-                                            <Button Content="❌" HorizontalAlignment="Right" Click="BtnDeleteTask_Click" Tag="{Binding Id}" Background="Transparent" BorderThickness="0"/>
+                                            <Button Content="❌" HorizontalAlignment="Right" Click="BtnDeleteTask_Click" Tag="{Binding Id}" Background="Transparent" BorderThickness="0" Foreground="#9CA3AF" FontWeight="Bold" VerticalAlignment="Center" Padding="4"/>
                                         </Grid>
                                     </Border>
                                     <DataTemplate.Triggers>
                                         <DataTrigger Binding="{Binding IsOverdue}" Value="True">
-                                            <Setter TargetName="TaskTitleText" Property="Foreground" Value="Red"/>
+                                            <Setter TargetName="TaskTitleText" Property="Foreground" Value="Black"/>
                                             <Setter TargetName="TaskTitleText" Property="FontWeight" Value="Bold"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding IsCompleted}" Value="True">
                                             <Setter TargetName="TaskTitleText" Property="TextDecorations" Value="Strikethrough"/>
-                                            <Setter TargetName="TaskTitleText" Property="Foreground" Value="Gray"/>
+                                            <Setter TargetName="TaskTitleText" Property="Foreground" Value="#9CA3AF"/>
                                         </DataTrigger>
                                     </DataTemplate.Triggers>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                        <StackPanel Grid.Row="2" Margin="0,10,0,0" Orientation="Vertical">
-                            <TextBox x:Name="TxtNewTaskTitle" Height="30" Margin="0,0,0,5" Padding="5"/>
+
+                        <!-- Форма добавления задачи -->
+                        <StackPanel Grid.Row="2" Margin="0,12,0,0" Orientation="Vertical">
+                            <TextBox x:Name="TxtNewTaskTitle" Height="32" Margin="0,0,0,6" Padding="8,4" Background="White"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1*"/>
                                     <ColumnDefinition Width="1*"/>
                                 </Grid.ColumnDefinitions>
-                                <ComboBox x:Name="CbxRecurrence" SelectedIndex="0" Grid.Column="0" Margin="0,0,5,0" Height="30">
+                                <ComboBox x:Name="CbxRecurrence" SelectedIndex="0" Grid.Column="0" Margin="0,0,6,0" Height="32">
                                     <ComboBoxItem Content="Без повторений"/>
                                     <ComboBoxItem Content="Ежедневно"/>
                                     <ComboBoxItem Content="Еженедельно"/>
                                     <ComboBoxItem Content="Ежемесячно"/>
                                 </ComboBox>
-                                <Button Content="➕ Добавить задачу" Grid.Column="1" Height="30" Click="BtnAddTask_Click" Background="#E8F5E9"/>
+                                <Button Style="{StaticResource ModernButtonStyle}" Content="➕ Добавить задачу" Grid.Column="1" Height="32" Click="BtnAddTask_Click" Background="#F0FDF4" BorderBrush="#BBF7D0" FontWeight="SemiBold"/>
                             </Grid>
                         </StackPanel>
                     </Grid>
@@ -169,4 +328,4 @@
             </TabItem>
         </TabControl>
     </Grid>
-</Window>
+</Window>       
